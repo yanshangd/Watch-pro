@@ -1,7 +1,7 @@
 <template>
-原创Watch-pro
-请勿用于非法用途
-使用即与本开发
+  <!-- 原创Watch-pro
+By:Yanshang
+github:https://github.com/yanshangd -->
   <div>
     <div ref="dplayer"
          class="box"></div>
