@@ -93,7 +93,7 @@ export default {
     //socket连接初始化
     initWebSocket: function () {
       // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-      this.websock = new WebSocket("ws://server.zmox.cn/online/" + this.from.room + "/" + this.from.name);
+      this.websock = new WebSocket("ws://后端域名/online/" + this.from.room + "/" + this.from.name);
       // this.websock = new WebSocket("ws://" + window.location.host + "/online/" + this.from.room + "/" + this.from.name);
       this.websock.onopen = this.websocketonopen;
       this.websock.onclose = this.websocketclose;
