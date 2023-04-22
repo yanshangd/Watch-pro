@@ -1,4 +1,4 @@
-# watch-pro
+# m-share
 
 ## Project setup
 ```
