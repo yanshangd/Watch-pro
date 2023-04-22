@@ -15,8 +15,6 @@ github:https://github.com/yanshangd -->
     </div>
     <div class="text-main">
       <p>一起看Pro</p>
-      <p>颜尚云盘1:https://cloud.zmox.cn/</p>
-      <p>颜尚云盘2:https://cloud.bnmn.cf/</p>
       <p>问题反馈:zmoz@qq.com</p>
       <p>Copyright ©2023 Yanshang 1.1.5 </p>
     </div>
