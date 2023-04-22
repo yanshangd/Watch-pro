@@ -9,13 +9,13 @@ const routes = [
     name: 'home',
     component: () => import(/* webpackChunkName: "create" */ '../views/CreateView.vue'),
     meta: {
-      title: '欢迎来到Watch-pro'
+      title: 'Watch-pro在线同时观看'
     }
   },
   {
     path: '/watch',
     name: 'watch',
-    component: () => import(/* webpackChunkName: "watch" */ '../views/WatchView.vue'),
+    component: () => import(/* webpackChunkName: "watch" */ '../views/WatchViewc.vue'),
     meta: {
       title: 'Watch-pro'
     }

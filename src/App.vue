@@ -12,4 +12,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+html,
+body,
+#app {
+  height: 100vh;
+  margin: 0px;
+  padding: 0px;
+}
 </style>

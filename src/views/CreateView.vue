@@ -2,7 +2,7 @@
   <!-- 原创Watch-pro
 By:Yanshang
 github:https://github.com/yanshangd -->
-  <div>
+  <div class="create-body">
     <div class="create-main">
       <div class="room"
            @click="roomDialog('create')">
@@ -13,11 +13,19 @@ github:https://github.com/yanshangd -->
         <div>加入房间<i class="el-icon-plus"></i></div>
       </div>
     </div>
-    <!-- 创建or加入房间 -->
+    <div class="text-main">
+      <p>一起看Pro</p>
+      <p>颜尚云盘1:https://cloud.zmox.cn/</p>
+      <p>颜尚云盘2:https://cloud.bnmn.cf/</p>
+      <p>问题反馈:zmoz@qq.com</p>
+      <p>Copyright ©2023 Yanshang 1.1.5 </p>
+    </div>
+    <!-- 弹窗创建or加入房间 -->
     <el-dialog :title="type=='create'?'创建房间':'加入房间'"
                :visible.sync="Createdialog">
       <el-form :model="form"
-               :rules="rules">
+               :rules="rules"
+               ref="ruleForm">
         <el-form-item label="房间号"
                       prop="room"
                       :label-width="formLabelWidth">
@@ -87,7 +95,7 @@ export default {
         url: [
           { required: true, message: '请输入播放地址', trigger: 'blur' }
         ]
-      }
+      },
     }
   },
   methods: {
@@ -95,21 +103,28 @@ export default {
       this.type = type;
       this.Createdialog = true;
     },
-    async Fromdialog () {
+    Fromdialog () {
+      this.$refs.ruleForm.validate((valid) => {
+        if (valid) {
+          this.Result();
+        } else {
+          console.log('error submit!!');
+          return;
+        }
+      });
+    },
+    async Result () {
       var data;
-      var value = '添加';
       if (this.type === 'create') {
         data = await this.$http.post('/room/add', this.form);
-
       } else {
-        value = '加入';
         data = await this.$http.post('/room/join', this.form);
       }
-      if (data.data.data === true) {
-        this.$message.success(value + '成功');
+      if (data.data.data) {
+        this.$message.success(data.data.type);
         this.$router.push({ path: '/watch', query: { room: this.form.room, name: this.form.name } })
       } else {
-        this.$message.error(value + '失败');
+        this.$message.error(data.data.type);
       }
       this.Createdialog = false;
     }
@@ -121,16 +136,20 @@ export default {
 .create-main {
   display: flex;
   justify-content: center;
-  margin-top: 10%;
+  padding-top: 10%;
   .room {
-    border: 1px solid #ccc;
     border-radius: 4px;
     padding: 50px;
     margin: 10px;
-    background-color: #e2e2e2;
+    // background-color: #e2e2e2;
     color: #33a5fd;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
   }
+}
+.text-main {
+  padding-top: 50px;
+  text-align: center;
 }
 .el-dialog {
   width: 80%;
