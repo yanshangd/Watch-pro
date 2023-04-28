@@ -11,17 +11,6 @@
     <div class="watch-art"
          ref="artRef"
          :style="style"></div>
-    <!-- <div class="msg-mian">
-      <el-input v-model="chatMsg"
-                placeholder="请输入内容"></el-input>
-      <el-button type="primary"
-                 @click="sendMsgs('msg',1001,chatMsg,'clear')">发送</el-button>
-    </div> -->
-    <!-- <div class="switchVideo">
-      <el-button type="primary"
-                 class="Btn"
-                 @click="Changedialog=true">切换视频</el-button>
-    </div> -->
     <chat-msg-com class="chatmsg"
                   :chatList="chatList"
                   :userName="from.name" />
@@ -63,13 +52,11 @@ export default {
         height: '600px',
       },
       instance: null,
-      socketStatus: true,
       sendmsg: {
         type: '',
         code: '',
         data: ''
       },
-      msg: [],
       from: {
         room: '',
         name: ''
@@ -77,7 +64,6 @@ export default {
       chatList: [],
       chatMsg: '',
       socketMsgStatus: true,
-      videoUrl: '',
       connectType: '',
       Changedialog: false,
       rules: {
@@ -86,14 +72,17 @@ export default {
         ]
       },
       isswitchVideo: false,
-      videoH: '600px',
       dialogTopL: '',
-      isMobile: ''
+      isMobile: '',
+      JoinType: '',
+      currentTime: 0,
     }
   },
   created () {
     this.from.room = this.$route.query.room;
     this.from.name = this.$route.query.name;
+    this.JoinType = this.$route.query.type;
+
     this.initWebSocket();
     this.isMobile = !!navigator.userAgent.match(/AppleWebKit.*Mobile.*/);
     if (this.isMobile) {
@@ -115,22 +104,14 @@ export default {
       autoHeight: true,
       autoSize: true,
       mini: true,
-      theme: '#ffad00',
+      theme: '#409EFF',
       customType: {
         m3u8: playM3u8,
       },
       plugins: [
         artplayerPluginDanmuku({
           // 弹幕数组
-          danmuku: [
-            {
-              text: '111', // 弹幕文本
-              time: 1, // 发送时间，单位秒
-              color: '#fff', // 弹幕局部颜色
-              border: false, // 是否显示描边
-              mode: 0, // 弹幕模式: 0表示滚动, 1静止
-            },
-          ],
+          danmuku: [],
           speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
           opacity: 1, // 弹幕透明度，范围在[0 ~ 1]
           fontSize: 25, // 字体大小，支持数字和百分比
@@ -172,12 +153,21 @@ export default {
     });
     // 准备事件
     this.instance.on('ready', () => {
+      if (this.currentTime != 0) {
+        this.instance.seek = this.currentTime;
+        this.instance.muted = true;
+        this.instance.play();
+        var data = {
+          msg: '自动静音，请手动调音'
+        }
+        this.chatList.unshift(data)
+      }
     });
     // 播放事件
     this.instance.on('play', () => {
       if (this.socketMsgStatus) {
         this.sendMsgs('viode', 2001, 'play');
-        console.log('播放');
+        console.log('播放' + this.instance.currentTime);
       } this.socketMsgStatus = true
     });
     // 停止事件
@@ -195,6 +185,7 @@ export default {
       }
       this.socketMsgStatus = true;
     });
+
   },
   beforeDestroy () {
     if (this.instance && this.instance.destroy) {
@@ -202,16 +193,12 @@ export default {
     }
   },
   methods: {
-    sendMsgs (type, code, msg, input) {
-      if (input == 'clear') {
-        if (this.chatMsg.length == 0) return;
-        this.chatMsg = ''
-      }
+    sendMsgs (type, code, msg, name = this.from.name) {
       this.sendmsg = {
         type: type,
         code: code,
         data: {
-          name: this.from.name,
+          name: name,
           msg: msg
         }
       }
@@ -260,8 +247,13 @@ export default {
         if (value.code == 1002 && this.isswitchVideo == false) {
           this.isswitchVideo = true;
           this.switchVideo(value.data.url);
+          // if (this.JoinType != 'join') {
+          //   this.sendMsgs('viedo', 2005, value.data.name);
+          //   // value.data.name = 'system';
+          //   console.log("进度" + this.instance.currentTime);
+          // }
         }
-        console.log(value.data);
+        // console.log(value.data);
       } else {
         this.socketMsgStatus = false;
         switch (value.code) {
@@ -277,22 +269,28 @@ export default {
           case 2004:
             this.switchVideo(value.data.msg);
             return;
+          case 2005:
+            this.sendMsgs('video', 2006, this.instance.currentTime, value.data);
+            return;
+          case 2006:
+            this.currentTime = value.data.msg;
+            return;
         }
       }
     },
     ChangeVideo () {
       this.Changedialog = false;
       this.sendMsgs('video', 2004, this.option.url);
-      console.log(this.option.url);
+      // console.log(this.option.url);
     },
     switchVideo (url) {
       // const connectType = url.substring(url.length - 4) === 'm3u8' ? 'customHls' : 'normal';
       if (this.isMobile) {
         this.instance.switchUrl(url, 'new url');
-        return;
+      } else {
+        this.instance.url = url;
+        this.instance.type = 'm3u8';
       }
-      this.instance.url = url;
-      this.instance.type = 'm3u8';
     },
     getInstance (art) {
       this.instance = art;
@@ -328,7 +326,7 @@ export default {
   }
 }
 .watch-art {
-  margin-top: 50px;
+  padding-top: 50px;
   // width: 100%;
 }
 .msg-mian {
