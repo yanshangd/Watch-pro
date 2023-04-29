@@ -9,12 +9,10 @@ github:https://github.com/yanshangd -->
             :key="item.id"
             :justify="item.name==userName?'end':''">
       <el-card class="box-card"
-               body-style="padding:0px 10px;height: 60px; margin:0px;">
-        <div>
-          <p style="font-size: 10px;">{{ item.name!=null?item.name:'system' }}</p>
-          <el-divider style="margin:0px" />
-          <p style="font-size: 15px;line-height: 10px;">{{ item.msg }}</p>
-        </div>
+               body-style="padding:0px 10px; margin:0px;">
+        <span style="font-size: 12px;">{{ item.name!=null?item.name:'system' }}</span>
+        <el-divider style="margin:0px" />
+        <span style="font-size: 15px;">{{ item.msg }}</span>
       </el-card>
     </el-row>
   </div>
