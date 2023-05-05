@@ -86,7 +86,7 @@ export default {
     this.initWebSocket();
     this.isMobile = !!navigator.userAgent.match(/AppleWebKit.*Mobile.*/);
     if (this.isMobile) {
-      this.style.height = '250px',
+      this.style.height = '280px',
         this.dialogTopL = 'padding-top: 180px'
     }
   },
@@ -156,12 +156,12 @@ export default {
       if (this.currentTime != 0) {
         this.instance.seek = this.currentTime;
         this.instance.muted = true;
-        this.instance.play();
         var data = {
           msg: '自动静音，请手动调音'
         }
         this.chatList.unshift(data)
       }
+      this.instance.play();
     });
     // 播放事件
     this.instance.on('play', () => {
@@ -207,7 +207,7 @@ export default {
     //socket连接初始化
     initWebSocket: function () {
       // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-      this.websock = new WebSocket("ws://192.168.124.6:8085/online/" + this.from.room + "/" + this.from.name);
+      this.websock = new WebSocket("ws://192.168.0.103:8085/online/" + this.from.room + "/" + this.from.name);
       // this.websock = new WebSocket("ws://" + window.location.host + "/online/" + this.from.room + "/" + this.from.name);
       this.websock.onopen = this.websocketonopen;
       this.websock.onclose = this.websocketclose;

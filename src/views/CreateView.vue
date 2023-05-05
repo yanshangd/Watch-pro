@@ -15,6 +15,8 @@ github:https://github.com/yanshangd -->
     </div>
     <div class="text-main">
       <p>一起看Pro</p>
+      <p>颜尚云盘1:https://cloud.zmox.cn/</p>
+      <p>颜尚云盘2:https://cloud.bnmn.cf/</p>
       <p>问题反馈:zmoz@qq.com</p>
       <p>Copyright ©2023 Yanshang 1.1.5 </p>
     </div>
@@ -35,7 +37,7 @@ github:https://github.com/yanshangd -->
                       :label-width="formLabelWidth">
           <el-input v-model="form.password"
                     autocomplete="off"
-                    show-password></el-input>
+                    placeholder="密码可为空"></el-input>
         </el-form-item>
         <el-form-item label="昵称"
                       prop="name"
@@ -84,9 +86,6 @@ export default {
           { required: true, message: '请输入房间号' },
           { type: 'number', message: '房间号必须为数字值' }
         ],
-        password: [
-          { required: true, message: '请输入密码' }
-        ],
         name: [
           { required: true, message: '请输入昵称', trigger: 'blur' }
         ],
@@ -120,7 +119,7 @@ export default {
       }
       if (data.data.data) {
         this.$message.success(data.data.type);
-        this.$router.push({ path: '/watch', query: { room: this.form.room, name: this.form.name } })
+        this.$router.push({ path: '/watch', query: { room: this.form.room, name: this.form.name, type: this.type } })
       } else {
         this.$message.error(data.data.type);
       }
