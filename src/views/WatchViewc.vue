@@ -8,9 +8,15 @@
                    @click="Changedialog=true">切换视频</el-button>
       </div>
     </div>
-    <div class="watch-art"
-         ref="artRef"
-         :style="style"></div>
+    <artplayer-vue @get-instance="getInstance"
+                   :option="option"
+                   :style="style"
+                   @ready="ready"
+                   @play="play"
+                   @pause="pause"
+                   @seek="seek"
+                   @playbackRate="playbackRate"
+                   @danmu="danmu" />
     <chat-msg-com class="chatmsg"
                   :chatList="chatList"
                   :userName="from.name" />
@@ -35,12 +41,11 @@
 
 <script>
 import ChatMsgCom from '@/components/ChatMsg.vue'
-import Artplayer from 'artplayer';
-import Hls from 'hls.js';
-import artplayerPluginDanmuku from 'artplayer-plugin-danmuku'
+import ArtplayerVue from '@/components/ArtplayerCom.vue';
 export default {
   components: {
-    ChatMsgCom
+    ChatMsgCom,
+    ArtplayerVue
   },
   data () {
     return {
@@ -79,113 +84,19 @@ export default {
     }
   },
   created () {
+    // 获取参数
     this.from.room = this.$route.query.room;
     this.from.name = this.$route.query.name;
     this.JoinType = this.$route.query.type;
 
+    // 启动链接后端
     this.initWebSocket();
+    // 判断是否为手机
     this.isMobile = !!navigator.userAgent.match(/AppleWebKit.*Mobile.*/);
     if (this.isMobile) {
-      this.style.height = '280px',
+      this.style.height = '240px',
         this.dialogTopL = 'padding-top: 180px'
     }
-  },
-  mounted () {
-    this.instance = new Artplayer({
-      container: this.$refs.artRef,
-      playbackRate: true,
-      pip: true,
-      fullscreen: true,
-      fullscreenWeb: true,
-      miniProgressBar: true,
-      lock: true,
-      setting: true,
-      playsInline: true,
-      autoHeight: true,
-      autoSize: true,
-      mini: true,
-      theme: '#409EFF',
-      customType: {
-        m3u8: playM3u8,
-      },
-      plugins: [
-        artplayerPluginDanmuku({
-          // 弹幕数组
-          danmuku: [],
-          speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
-          opacity: 1, // 弹幕透明度，范围在[0 ~ 1]
-          fontSize: 25, // 字体大小，支持数字和百分比
-          color: '#FFFFFF', // 默认字体颜色
-          mode: 0, // 默认模式，0-滚动，1-静止
-          margin: [10, '25%'], // 弹幕上下边距，支持数字和百分比
-          antiOverlap: true, // 是否防重叠
-          useWorker: true, // 是否使用 web worker
-          synchronousPlayback: false, // 是否同步到播放速度
-          filter: (danmu) => danmu.text.length < 50, // 弹幕过滤函数，返回 true 则可以发送
-          lockTime: 5, // 输入框锁定时间，单位秒，范围在[1 ~ 60]
-          maxLength: 100, // 输入框最大可输入的字数，范围在[0 ~ 500]
-          minWidth: 200, // 输入框最小宽度，范围在[0 ~ 500]，填 0 则为无限制
-          maxWidth: 400, // 输入框最大宽度，范围在[0 ~ Infinity]，填 0 则为 100% 宽度
-          theme: 'dark', // 输入框自定义挂载时的主题色，默认为 dark，可以选填亮色 light
-          beforeEmit: (danmu) => !!danmu.text.trim(), // 发送弹幕前的自定义校验，返回 true 则可以发送
-        }),
-      ],
-    });
-    function playM3u8 (video, url, art) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-
-        // optional
-        art.hls = hls;
-        art.once('url', () => hls.destroy());
-        art.once('destroy', () => hls.destroy());
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-      } else {
-        art.notice.show = 'Unsupported playback format: m3u8';
-      }
-    }
-    this.instance.on('artplayerPluginDanmuku:emit', (danmu) => {
-      this.sendMsgs('msg', 1001, danmu.text);
-      // console.info('新增弹幕', danmu);
-    });
-    // 准备事件
-    this.instance.on('ready', () => {
-      if (this.currentTime != 0) {
-        this.instance.seek = this.currentTime;
-        this.instance.muted = true;
-        var data = {
-          msg: '自动静音，请手动调音'
-        }
-        this.chatList.unshift(data)
-      }
-      this.instance.play();
-    });
-    // 播放事件
-    this.instance.on('play', () => {
-      if (this.socketMsgStatus) {
-        this.sendMsgs('viode', 2001, 'play');
-        console.log('播放' + this.instance.currentTime);
-      } this.socketMsgStatus = true
-    });
-    // 停止事件
-    this.instance.on('pause', () => {
-      if (this.socketMsgStatus) {
-        this.sendMsgs('viode', 2002, 'pause');
-        console.log('暂停');
-      }
-      this.socketMsgStatus = true
-    });
-    // 进度事件
-    this.instance.on('seek', (currentTime) => {
-      if (this.socketMsgStatus) {
-        this.sendMsgs('viode', 2003, currentTime);
-      }
-      this.socketMsgStatus = true;
-    });
-
   },
   beforeDestroy () {
     if (this.instance && this.instance.destroy) {
@@ -193,6 +104,7 @@ export default {
     }
   },
   methods: {
+    // 统一发送接口
     sendMsgs (type, code, msg, name = this.from.name) {
       this.sendmsg = {
         type: type,
@@ -207,7 +119,7 @@ export default {
     //socket连接初始化
     initWebSocket: function () {
       // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-      this.websock = new WebSocket("ws://192.168.0.103:8085/online/" + this.from.room + "/" + this.from.name);
+      this.websock = new WebSocket("ws://192.168.3.10:8085/online/" + this.from.room + "/" + this.from.name);
       // this.websock = new WebSocket("ws://" + window.location.host + "/online/" + this.from.room + "/" + this.from.name);
       this.websock.onopen = this.websocketonopen;
       this.websock.onclose = this.websocketclose;
@@ -233,6 +145,7 @@ export default {
         console.log("重新连接");
       }, 1000);
     },
+    // 消息处理
     resultMsg (value) {
       if (value.type == 'msg') {
         this.chatList.unshift(value.data);
@@ -275,26 +188,85 @@ export default {
           case 2006:
             this.currentTime = value.data.msg;
             return;
+          case 2007:
+            this.instance.playbackRate = value.data.msg;
+            console.log("2");
+            return;
         }
       }
     },
+    // 更换链接
     ChangeVideo () {
-      this.Changedialog = false;
-      this.sendMsgs('video', 2004, this.option.url);
-      // console.log(this.option.url);
-    },
-    switchVideo (url) {
-      // const connectType = url.substring(url.length - 4) === 'm3u8' ? 'customHls' : 'normal';
-      if (this.isMobile) {
-        this.instance.switchUrl(url, 'new url');
-      } else {
-        this.instance.url = url;
-        this.instance.type = 'm3u8';
+      var isUrl = /^http[s]?:\/\/.*/.test(this.option.url);
+      if (isUrl) {
+        this.Changedialog = false;
+        this.sendMsgs('video', 2004, this.option.url);
+        // console.log(this.option.url);
       }
     },
+    // 切换视频
+    switchVideo (url) {
+      // const connectType = url.substring(url.length - 4) === 'm3u8' ? 'customHls' : 'normal';
+      this.instance.switchUrl(url, 'new url');
+      // if (this.isMobile) {
+
+      // } else {
+      //   this.instance.url = url;
+      //   this.instance.type = 'm3u8';
+      // }
+
+    },
+    // 获取播放器参数
     getInstance (art) {
       this.instance = art;
       console.info(art);
+    },
+    // 准备
+    ready () {
+      if (this.currentTime != 0) {
+        this.instance.seek = this.currentTime;
+        this.instance.muted = true;
+        var data = {
+          msg: '自动静音，请手动调音'
+        }
+        this.chatList.unshift(data)
+      }
+      this.instance.play();
+    },
+    // 播放
+    play () {
+      if (this.socketMsgStatus) {
+        this.sendMsgs('viode', 2001, 'play');
+        console.log('播放' + this.instance.currentTime);
+      }
+      this.socketMsgStatus = true
+    },
+    // 暂停
+    pause () {
+      if (this.socketMsgStatus) {
+        this.sendMsgs('viode', 2002, 'pause');
+      }
+      this.socketMsgStatus = true
+    },
+    // 进度
+    seek (e) {
+      if (this.socketMsgStatus) {
+        this.sendMsgs('viode', 2003, e);
+      }
+      this.socketMsgStatus = true;
+    },
+    // 倍速
+    playbackRate (e) {
+      if (this.socketMsgStatus) {
+        this.sendMsgs('viode', 2007, e);
+      }
+      this.socketMsgStatus = true;
+      // console.log(e);
+    },
+    // 弹幕
+    danmu (e) {
+      this.sendMsgs('msg', 1001, e.text);
+      console.info('新增弹幕', e);
     },
   },
 };
@@ -346,6 +318,6 @@ export default {
   }
 }
 .chatmsg {
-  margin-top: 10px;
+  padding-top: 80px;
 }
 </style>
