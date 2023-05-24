@@ -257,11 +257,7 @@ export default {
     },
     // 倍速
     playbackRate (e) {
-      if (this.socketMsgStatus) {
         this.sendMsgs('viode', 2007, e);
-      }
-      this.socketMsgStatus = true;
-      // console.log(e);
     },
     // 弹幕
     danmu (e) {
