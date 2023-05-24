@@ -102,7 +102,7 @@ export default {
           theme: 'light', // 输入框自定义挂载时的主题色，默认为 dark，可以选填亮色 light
           beforeEmit: (danmu) => !!danmu.text.trim(), // 发送弹幕前的自定义校验，返回 true 则可以发送
           // 通过 mount 选项可以自定义输入框挂载的位置，默认挂载于播放器底部，仅在当宽度小于最小值时生效
-          mount: document.querySelector('.artplayer-danmuku'),
+          // mount: document.querySelector('.artplayer-danmuku'),
         }),
       ],
     });
