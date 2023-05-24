@@ -160,13 +160,7 @@ export default {
         if (value.code == 1002 && this.isswitchVideo == false) {
           this.isswitchVideo = true;
           this.switchVideo(value.data.url);
-          // if (this.JoinType != 'join') {
-          //   this.sendMsgs('viedo', 2005, value.data.name);
-          //   // value.data.name = 'system';
-          //   console.log("进度" + this.instance.currentTime);
-          // }
         }
-        // console.log(value.data);
       } else {
         this.socketMsgStatus = false;
         switch (value.code) {
@@ -190,7 +184,7 @@ export default {
             return;
           case 2007:
             this.instance.playbackRate = value.data.msg;
-            console.log("2");
+            this.socketMsgStatus = true;
             return;
         }
       }
@@ -208,13 +202,6 @@ export default {
     switchVideo (url) {
       // const connectType = url.substring(url.length - 4) === 'm3u8' ? 'customHls' : 'normal';
       this.instance.switchUrl(url, 'new url');
-      // if (this.isMobile) {
-
-      // } else {
-      //   this.instance.url = url;
-      //   this.instance.type = 'm3u8';
-      // }
-
     },
     // 获取播放器参数
     getInstance (art) {
@@ -237,7 +224,7 @@ export default {
     play () {
       if (this.socketMsgStatus) {
         this.sendMsgs('viode', 2001, 'play');
-        console.log('播放' + this.instance.currentTime);
+        // console.log('播放' + this.instance.currentTime);
       }
       this.socketMsgStatus = true
     },
@@ -257,7 +244,7 @@ export default {
     },
     // 倍速
     playbackRate (e) {
-        this.sendMsgs('viode', 2007, e);
+      this.sendMsgs('viode', 2007, e);
     },
     // 弹幕
     danmu (e) {
