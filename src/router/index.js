@@ -15,7 +15,7 @@ const routes = [
   {
     path: '/watch',
     name: 'watch',
-    component: () => import(/* webpackChunkName: "watch" */ '../views/WatchViewc.vue'),
+    component: () => import(/* webpackChunkName: "watch" */ '../views/WatchView.vue'),
     meta: {
       title: 'Watch-pro'
     }
