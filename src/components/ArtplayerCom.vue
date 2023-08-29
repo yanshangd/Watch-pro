@@ -2,14 +2,16 @@
   <div>
     <div class="artplayer"
          ref="artRef"></div>
-    <div class="artplayer-danmuku"></div>
+    <!-- <div class="artplayer-danmuku"></div> -->
   </div>
 </template>
 
 <script>
 import Artplayer from "artplayer";
 import artplayerPluginDanmuku from 'artplayer-plugin-danmuku'
-import Hls from 'hls.js';
+// import Hls from 'hls.js';
+import Hls from 'swarmcloud-hls/dist/hls.min';
+
 export default {
   data () {
     return {
@@ -82,7 +84,7 @@ export default {
         },
       ],
       plugins: [
-        artplayerPluginDanmuku({
+        artplayerPluginDanmuku({  // 弹幕
           // 弹幕数组
           danmuku: [],
           speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
@@ -106,20 +108,28 @@ export default {
         }),
       ],
     });
+    var p2pConfig = {
+      logLevel: 'debug',
+      live: false,
+      announceLocation: 'hk',        // if using Hongkong tracker
+      // announceLocation: 'us',        // if using USA tracker
+      // Other p2pConfig options provided by CDNBye
+    }
     function playM3u8 (video, url, art) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
+
+      if (Hls.P2pEngine.isMSESupported()) {
+        var hls = new Hls({
+          p2pConfig
+        });
         hls.loadSource(url);
         hls.attachMedia(video);
-
-        // optional
         art.hls = hls;
-        art.once('url', () => hls.destroy());
-        art.once('destroy', () => hls.destroy());
+        // art.once('url', () => hls.destroy());
+        // art.once('destroy', () => hls.destroy());
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
-      } else {
-        art.notice.show = 'Unsupported playback format: m3u8';
+        // use ServiceWorker based p2p engine if hls.js is not supported
+        new Hls.P2pEngine(p2pConfig)
       }
     }
     this.instance = art;
